@@ -1,0 +1,46 @@
+{
+  "expectations": [
+    {
+      "id": "10d3c1e3-5d4f-4da9-91e9-f21b02b0a05d",
+      "kwargs": {
+        "min_value": 1
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_row_count_to_be_between"
+    },
+    {
+      "id": "c52fb843-4e77-44ab-9754-f11f848a66fc",
+      "kwargs": {
+        "column": "vendorID"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "79f4a873-59ef-4d60-bad9-32bc00559b65",
+      "kwargs": {
+        "column": "paymentType",
+        "mostly": 0.95,
+        "value_set": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    }
+  ],
+  "id": "ce84b8e6-2b06-4203-9cb0-9c220be259e7",
+  "meta": {
+    "great_expectations_version": "1.13.1"
+  },
+  "name": "bronze.sales.green_tripdata_2017",
+  "notes": null
+}

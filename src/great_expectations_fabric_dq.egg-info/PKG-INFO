@@ -1,3 +1,25 @@
+Metadata-Version: 2.4
+Name: great-expectations-fabric-dq
+Version: 0.1.0
+Summary: Convention-driven data quality framework using Great Expectations, PySpark, and Delta in Microsoft Fabric
+Requires-Python: <3.14,>=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: great-expectations<2,>=1.13.0
+Requires-Dist: pyspark<4,>=3.5
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: test
+Requires-Dist: pytest>=8.0; extra == "test"
+Provides-Extra: notebook
+Requires-Dist: ipykernel>=6.29; extra == "notebook"
+Requires-Dist: jupyterlab>=4.2; extra == "notebook"
+Requires-Dist: nbformat>=5.10; extra == "notebook"
+Requires-Dist: pandas>=2.2; extra == "notebook"
+Requires-Dist: deltalake>=0.19; extra == "notebook"
+Requires-Dist: pyarrow>=16.0; extra == "notebook"
+Provides-Extra: delta-path-logging
+Requires-Dist: deltalake>=0.19; extra == "delta-path-logging"
+Requires-Dist: pyarrow>=16.0; extra == "delta-path-logging"
+
 # Great Expectations + PySpark Lakehouse Data Quality Framework
 
 This repository contains a convention-driven DQ framework for Microsoft Fabric Spark.
@@ -58,7 +80,7 @@ Expected location:
 ## Fabric Usage
 
 1. Attach an Environment with required libraries (including Great Expectations).
-2. If you enable metrics logging to a table, provision `analytics.dq_metrics` in your Fabric environment.
+2. Create the metrics table using `sql/create_dq_metrics.sql`.
 3. In a notebook, import and call the wrapper directly:
 
 ```python
@@ -108,7 +130,7 @@ Then select the `Python (.venv) great-expectations` kernel in VS Code/Jupyter no
 ## Local Run (Sample Dataset)
 
 Use `src/optimised-04.py` to run wrapper-first GX validation locally against
-`data/green_tripdata_2017_sample.csv`.
+`local_mvp/data/green_tripdata_2017_sample.csv`.
 
 Prerequisites:
 
@@ -122,13 +144,12 @@ Tested setup and run commands:
 sudo apt-get update
 sudo apt-get install -y openjdk-21-jre-headless
 
-# 2) Create the project virtual environment
-uv venv
+# 2) Create a Python 3.13 virtual environment
+uv venv --python /usr/bin/python3.13 .venv313
 
 # 3) Install project dependencies
-source .venv/bin/activate
-uv sync --extra notebook
+uv pip install --python .venv313/bin/python -e .
 
 # 4) Run local GX validation via the wrapper API
-python src/optimised-04.py
+.venv313/bin/python src/optimised-04.py
 ```

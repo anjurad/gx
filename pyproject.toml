@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "great-expectations-fabric-dq"
+version = "0.1.0"
+description = "Convention-driven data quality framework using Great Expectations, PySpark, and Delta in Microsoft Fabric"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+  "great-expectations>=1.13.0,<2",
+  "pyspark>=3.5,<4",
+  "pyyaml>=6.0"
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+]
+notebook = [
+  "ipykernel>=6.29",
+  "jupyterlab>=4.2",
+  "nbformat>=5.10",
+  "pandas>=2.2",
+  "deltalake>=0.19",
+  "pyarrow>=16.0",
+]
+delta-path-logging = [
+  "deltalake>=0.19",
+  "pyarrow>=16.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv]
+managed = true

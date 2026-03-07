@@ -1,0 +1,1 @@
+{"logged_at": "2026-03-05T17:27:22.352613+00:00", "suite_name": "bronze.sales.green_tripdata_2017", "run_id": "d5e3a509-c4d1-4d24-9cfe-725d1eb07e2a", "success": true, "evaluated_expectations": 3, "failed_expectations": 0, "source_format": "delta", "source_path": "/workspaces/great-expectations/data/green_tripdata_2017_sample.delta"}

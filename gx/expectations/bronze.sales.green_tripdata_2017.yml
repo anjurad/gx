@@ -1,0 +1,17 @@
+expectation_suite_name: bronze.sales.green_tripdata_2017
+
+expectations:
+  - expectation_type: expect_table_row_count_to_be_between
+    kwargs:
+      min_value: 1
+
+  - expectation_type: expect_column_values_to_not_be_null
+    kwargs:
+      column: vendorID
+      mostly: 1.0
+
+  - expectation_type: expect_column_values_to_be_in_set
+    kwargs:
+      column: paymentType
+      value_set: [1, 2, 3, 4, 5, 6]
+      mostly: 0.95

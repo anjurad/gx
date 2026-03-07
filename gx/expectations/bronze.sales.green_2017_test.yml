@@ -1,0 +1,88 @@
+expectation_suite_name: bronze.sales.green_2017_test
+
+expectations:
+  - expectation_type: expect_table_row_count_to_be_between
+    kwargs:
+      min_value: 500
+      max_value: 5000
+
+  - expectation_type: expect_table_columns_to_match_set
+    kwargs:
+      column_set:
+        - VendorID
+        - lpep_pickup_datetime
+        - lpep_dropoff_datetime
+        - store_and_fwd_flag
+        - RatecodeID
+        - PULocationID
+        - DOLocationID
+        - passenger_count
+        - trip_distance
+        - fare_amount
+        - extra
+        - mta_tax
+        - tip_amount
+        - tolls_amount
+        - ehail_fee
+        - improvement_surcharge
+        - total_amount
+        - payment_type
+        - trip_type
+        - congestion_surcharge
+        - source_file
+
+  - expectation_type: expect_column_values_to_not_be_null
+    kwargs:
+      column: VendorID
+      mostly: 1.0
+
+  - expectation_type: expect_column_values_to_not_be_null
+    kwargs:
+      column: payment_type
+      mostly: 1.0
+
+  - expectation_type: expect_column_values_to_be_in_set
+    kwargs:
+      column: VendorID
+      value_set: [1, 2]
+      mostly: 1.0
+
+  - expectation_type: expect_column_values_to_be_in_set
+    kwargs:
+      column: payment_type
+      value_set: [1, 2, 3, 4]
+      mostly: 1.0
+
+  - expectation_type: expect_column_values_to_be_in_set
+    kwargs:
+      column: trip_type
+      value_set: [1, 2]
+      mostly: 1.0
+
+  - expectation_type: expect_column_values_to_be_between
+    kwargs:
+      column: passenger_count
+      min_value: 1
+      max_value: 6
+      mostly: 0.99
+
+  - expectation_type: expect_column_values_to_be_between
+    kwargs:
+      column: trip_distance
+      min_value: 0
+      max_value: 200
+      mostly: 0.99
+
+  - expectation_type: expect_column_values_to_be_between
+    kwargs:
+      column: fare_amount
+      min_value: 0
+      max_value: 600
+      mostly: 0.99
+
+  - expectation_type: expect_column_values_to_be_between
+    kwargs:
+      column: total_amount
+      min_value: 0
+      max_value: 700
+      mostly: 0.99

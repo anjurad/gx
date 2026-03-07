@@ -1,0 +1,163 @@
+{
+  "expectations": [
+    {
+      "id": "f2f365df-01f5-4e3a-8e71-2fba809ce5ec",
+      "kwargs": {
+        "min_value": 500,
+        "max_value": 5000
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_row_count_to_be_between"
+    },
+    {
+      "id": "5267149c-58dc-4cc8-b6db-a86ecb52bf0f",
+      "kwargs": {
+        "column_set": [
+          "VendorID",
+          "lpep_pickup_datetime",
+          "lpep_dropoff_datetime",
+          "store_and_fwd_flag",
+          "RatecodeID",
+          "PULocationID",
+          "DOLocationID",
+          "passenger_count",
+          "trip_distance",
+          "fare_amount",
+          "extra",
+          "mta_tax",
+          "tip_amount",
+          "tolls_amount",
+          "ehail_fee",
+          "improvement_surcharge",
+          "total_amount",
+          "payment_type",
+          "trip_type",
+          "congestion_surcharge",
+          "source_file"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_columns_to_match_set"
+    },
+    {
+      "id": "6a21fd64-6f24-4822-8d00-a082970411e2",
+      "kwargs": {
+        "column": "VendorID",
+        "mostly": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "462cf9f5-c0b1-4ee4-a6be-7505dfed9f96",
+      "kwargs": {
+        "column": "payment_type",
+        "mostly": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "d2c4d2da-c034-4f72-9ccd-c5f71a003c8f",
+      "kwargs": {
+        "column": "VendorID",
+        "value_set": [
+          1,
+          2
+        ],
+        "mostly": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "7de5f799-b6db-411d-bdc4-d765ac6a640d",
+      "kwargs": {
+        "column": "payment_type",
+        "value_set": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "mostly": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "f4389103-e1ec-40b1-9504-8cbfbe702e96",
+      "kwargs": {
+        "column": "trip_type",
+        "value_set": [
+          1,
+          2
+        ],
+        "mostly": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "bf5fb9ec-f868-4478-ba0f-fba247e7f1fe",
+      "kwargs": {
+        "column": "passenger_count",
+        "min_value": 1,
+        "max_value": 6,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "38f2b197-a3b6-474a-8cfc-6f145f04ef86",
+      "kwargs": {
+        "column": "trip_distance",
+        "min_value": 0,
+        "max_value": 200,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "671ed775-3415-4ef4-b626-6c7bb915a632",
+      "kwargs": {
+        "column": "fare_amount",
+        "min_value": 0,
+        "max_value": 600,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "bec53db9-cdb8-4d3e-9db7-750d7bc7c822",
+      "kwargs": {
+        "column": "total_amount",
+        "min_value": 0,
+        "max_value": 700,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    }
+  ],
+  "id": "da67d496-c78e-4b92-b57c-f32a96620ab8",
+  "meta": {
+    "great_expectations_version": "1.13.1"
+  },
+  "name": "bronze.sales.green_2017_test",
+  "notes": null
+}
