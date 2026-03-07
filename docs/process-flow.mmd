@@ -1,5 +1,5 @@
 flowchart LR
-    subgraph Runtime[Active runtime flow]
+    subgraph Runtime[Swimlane 1: Runtime orchestration]
         A[A1 Caller input\nSpark DataFrame df\nlayer, schema_name, table_name\noptional sampling and metrics config]
         B[A2 run_data_quality\nsrc/dq/dq_runner.py]
         C[A3 Deterministic suite lookup\nbuild_suite_name + resolve_suite_path\ngx/expectations/layer.schema.table.yml]
@@ -14,7 +14,7 @@ flowchart LR
         G --> I
     end
 
-    subgraph GX[GX project artefacts]
+    subgraph GX[Swimlane 2: GX configuration and artefacts]
         J[G1 gx/great_expectations.yml\nGX context config\nstores, fluent datasources\ndata docs site, plugins directory]
         K[G2 gx/expectations/*.yml\nExpectation suites\nrequired validation input artefact]
         L[G3 gx/uncommitted/validations/\nvalidation result JSON artefacts]
