@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph Runtime[Active runtime flow]
+        A[A1 Caller input\nSpark DataFrame df\nlayer, schema_name, table_name\noptional sampling and metrics config]
+        B[A2 run_data_quality\nsrc/dq/dq_runner.py]
+        C[A3 Deterministic suite lookup\nbuild_suite_name + resolve_suite_path\ngx/expectations/layer.schema.table.yml]
+        D[A4 Preflight checks\ninput contract\nenvironment readiness\nsuite YAML validity]
+        E[A5 Sampling\nsrc/dq/sampling.py\nfull or statistical or stratified or auto]
+        F[A6 GX validation\n_run_gx_validation\nvalidate sampled DataFrame against suite]
+        G[A7 Normalise results\nsrc/dq/normalise.py\nGX result to metric rows and summary]
+        H[A8 Optional metrics write\n_write_metrics\ntable analytics.dq_metrics\nor path Delta or Parquet]
+        I[A9 Returned summary dict\nsuccess, expectation counts\nsampling metadata\nmetrics logging status]
+
+        A --> B --> C --> D --> E --> F --> G --> H --> I
+        G --> I
+    end
+
+    subgraph GX[GX project artefacts]
+        J[G1 gx/great_expectations.yml\nGX context config\nstores, fluent datasources\ndata docs site, plugins directory]
+        K[G2 gx/expectations/*.yml\nExpectation suites\nrequired validation input artefact]
+        L[G3 gx/uncommitted/validations/\nvalidation result JSON artefacts]
+        M[G4 gx/uncommitted/data_docs/\nrendered GX Data Docs output]
+        N[G5 gx/plugins/custom_data_docs/\ncustom docs styling and renderers]
+        O[G6 gx/checkpoints/\nconfigured store\nnot used by current wrapper flow]
+        P[G7 gx/validation_definitions/\nconfigured store\nnot used by current wrapper flow]
+    end
+
+    J --> F
+    K --> C
+    F --> L
+    L --> M
+    N --> M
+    O -. optional GX orchestration .-> F
+    P -. optional GX orchestration .-> F
