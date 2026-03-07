@@ -46,7 +46,7 @@ this README.
 
 ```mermaid
 flowchart LR
-    subgraph Runtime[Swimlane 1: Runtime orchestration]
+    subgraph Runtime[Swimlane 1 Runtime orchestration]
         A[A1 Caller input\nSpark DataFrame df\nlayer, schema_name, table_name\noptional sampling and metrics config]
         B[A2 run_data_quality\nsrc/dq/dq_runner.py]
         C[A3 Deterministic suite lookup\nbuild_suite_name + resolve_suite_path\ngx/expectations/layer.schema.table.yml]
@@ -61,7 +61,7 @@ flowchart LR
         G --> I
     end
 
-    subgraph GX[Swimlane 2: GX configuration and artefacts]
+    subgraph GX[Swimlane 2 GX configuration and artefacts]
         J[G1 gx/great_expectations.yml\nGX context config\nstores, fluent datasources\ndata docs site, plugins directory]
         K[G2 gx/expectations/*.yml\nExpectation suites\nrequired validation input artefact]
         L[G3 gx/uncommitted/validations/\nvalidation result JSON artefacts]
@@ -76,8 +76,8 @@ flowchart LR
     F --> L
     L --> M
     N --> M
-    O -. optional GX orchestration .-> F
-    P -. optional GX orchestration .-> F
+    O -.-> F
+    P -.-> F
 ```
 
 Active execution today is the `run_data_quality` path in `src/dq/`: caller input,
@@ -86,6 +86,9 @@ optional metrics persistence, and the returned summary. The `gx/checkpoints/` an
 `gx/validation_definitions/` artefacts are part of the GX project structure and
 stores configured in `gx/great_expectations.yml`, but they are not invoked by the
 current wrapper implementation.
+
+Dashed connectors from G6 and G7 indicate configured GX structures that are
+available in the project but not executed by the current wrapper flow.
 
 ### Runtime Activity Reference
 
