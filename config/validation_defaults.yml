@@ -10,6 +10,13 @@ metrics_store_format: "delta"
 metrics_store_path: "./logs/dq_metrics.delta"
 metrics_fail_on_persistence_error: false
 fail_on_validation_failure: false
+enable_sampling: false
+sampling_mode: "auto"
+sampling_confidence: 0.95
+sampling_margin_error: 0.01
+sampling_max_rows: 100000
+sampling_stratify_by: null
+sampling_seed: 42
 log_level: "INFO"
 result_format: "SUMMARY"
 suite_resolution_order:

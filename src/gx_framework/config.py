@@ -25,6 +25,13 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "metrics_store_path": "./logs/dq_metrics.delta",
     "metrics_fail_on_persistence_error": False,
     "fail_on_validation_failure": False,
+    "enable_sampling": False,
+    "sampling_mode": "auto",
+    "sampling_confidence": 0.95,
+    "sampling_margin_error": 0.01,
+    "sampling_max_rows": 100000,
+    "sampling_stratify_by": None,
+    "sampling_seed": 42,
     "log_level": "INFO",
     "result_format": "SUMMARY",
     "suite_resolution_order": [
@@ -54,6 +61,13 @@ class FrameworkConfig:
         metrics_store_path: Absolute target path for persisted validation metrics.
         metrics_fail_on_persistence_error: Whether metrics persistence failures raise.
         fail_on_validation_failure: Whether failed validations raise by default.
+        enable_sampling: Whether sampling should be applied by default.
+        sampling_mode: Sampling mode to apply when sampling is enabled.
+        sampling_confidence: Confidence level used for sample-size calculation.
+        sampling_margin_error: Margin of error used for sample-size calculation.
+        sampling_max_rows: Maximum number of sampled rows to validate.
+        sampling_stratify_by: Optional stratification column name.
+        sampling_seed: Random seed used when sampling is applied.
         log_level: Default logging level.
         result_format: GX validation result format.
         suite_resolution_order: Declared suite-resolution order.
@@ -73,6 +87,13 @@ class FrameworkConfig:
     metrics_store_path: Path
     metrics_fail_on_persistence_error: bool
     fail_on_validation_failure: bool
+    enable_sampling: bool
+    sampling_mode: str
+    sampling_confidence: float
+    sampling_margin_error: float
+    sampling_max_rows: int
+    sampling_stratify_by: str | None
+    sampling_seed: int
     log_level: str
     result_format: str
     suite_resolution_order: list[str]
@@ -133,6 +154,17 @@ def load_framework_config(
         fail_on_validation_failure=bool(
             config_payload["fail_on_validation_failure"]
         ),
+        enable_sampling=bool(config_payload["enable_sampling"]),
+        sampling_mode=str(config_payload["sampling_mode"]).lower(),
+        sampling_confidence=float(config_payload["sampling_confidence"]),
+        sampling_margin_error=float(config_payload["sampling_margin_error"]),
+        sampling_max_rows=int(config_payload["sampling_max_rows"]),
+        sampling_stratify_by=(
+            str(config_payload["sampling_stratify_by"])
+            if config_payload["sampling_stratify_by"] is not None
+            else None
+        ),
+        sampling_seed=int(config_payload["sampling_seed"]),
         log_level=str(config_payload["log_level"]).upper(),
         result_format=str(config_payload["result_format"]),
         suite_resolution_order=list(config_payload["suite_resolution_order"]),

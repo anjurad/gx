@@ -60,10 +60,19 @@ def test_validate_dataframe_returns_required_keys(
         "failed_expectations",
         "success_percent",
         "validation_time_utc",
+        "original_row_count",
+        "validated_row_count",
+        "sampling_strategy",
+        "sampling_confidence",
+        "sampling_margin_error",
+        "sampling_stratify_by",
         "failure_details",
     }
     assert result["success"] is True
     assert result["suite_name"] == "customers_suite"
+    assert result["original_row_count"] == 5
+    assert result["validated_row_count"] == 5
+    assert result["sampling_strategy"] == "full"
     result_files = list((tmp_path / "logs" / "validation_results").glob("*.json"))
     assert len(result_files) == 1
     assert json.loads(result_files[0].read_text(encoding="utf-8"))["success"] is True
@@ -98,6 +107,54 @@ def test_validate_dataframe_includes_failure_details(
             "unexpected_count": 3,
         }
     ]
+
+
+def test_validate_dataframe_applies_opt_in_sampling(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _build_config(tmp_path)
+    _write_suite_file(config.gx_root, "customers_suite")
+    monkeypatch.setattr(validator_module, "load_framework_config", lambda config_path=None: config)
+    monkeypatch.setattr(validator_module, "get_gx_context", lambda gx_root: object())
+
+    sampled_dataframe = FakeDataFrame(row_count=3)
+    captured: dict[str, Any] = {}
+
+    def fake_apply_sampling(**kwargs: Any) -> tuple[FakeDataFrame, dict[str, Any]]:
+        return sampled_dataframe, {
+            "sampling_strategy": "statistical",
+            "original_row_count": 9,
+            "validated_row_count": 3,
+            "sampling_confidence": 0.9,
+            "sampling_margin_error": 0.02,
+            "sampling_stratify_by": None,
+        }
+
+    def fake_prepare_runtime_batch_request(**kwargs: Any) -> FakeValidator:
+        captured.update(kwargs)
+        return FakeValidator(_success_payload())
+
+    monkeypatch.setattr(validator_module, "apply_sampling", fake_apply_sampling)
+    monkeypatch.setattr(
+        validator_module,
+        "_prepare_runtime_batch_request",
+        fake_prepare_runtime_batch_request,
+    )
+
+    result = validator_module.validate_dataframe(
+        df=FakeDataFrame(row_count=9),
+        dataset_name="customers",
+        sampling_config={"enabled": True, "confidence": 0.9, "margin_error": 0.02},
+        save_results=False,
+    )
+
+    assert captured["df"] is sampled_dataframe
+    assert result["original_row_count"] == 9
+    assert result["validated_row_count"] == 3
+    assert result["sampling_strategy"] == "statistical"
+    assert result["sampling_confidence"] == 0.9
+    assert result["sampling_margin_error"] == 0.02
 
 
 def test_validate_dataframe_raises_when_fail_on_error_enabled(
@@ -163,6 +220,8 @@ def test_validate_dataframe_persists_metrics_when_enabled(
     assert captured["dataset_name"] == "customers"
     assert captured["suite_name"] == "customers_suite"
     assert captured["row_count"] == 12
+    assert captured["original_row_count"] == 12
+    assert captured["sampling_metadata"]["sampling_strategy"] == "full"
     assert captured["validation_time_utc"] == result["validation_time_utc"]
 
 
@@ -232,6 +291,13 @@ def test_build_validation_metric_rows_flattens_expectation_results() -> None:
         suite_name="customers_suite",
         run_name="customers_20260308_120000",
         row_count=5,
+        original_row_count=7,
+        sampling_metadata={
+            "sampling_strategy": "statistical",
+            "sampling_confidence": 0.95,
+            "sampling_margin_error": 0.01,
+            "sampling_stratify_by": None,
+        },
         validation_time_utc="2026-03-08T12:00:00Z",
     )
 
@@ -246,6 +312,11 @@ def test_build_validation_metric_rows_flattens_expectation_results() -> None:
             "successful_expectations": 0,
             "failed_expectations": 1,
             "row_count": 5,
+            "original_row_count": 7,
+            "sampling_strategy": "statistical",
+            "sampling_confidence": 0.95,
+            "sampling_margin_error": 0.01,
+            "sampling_stratify_by": None,
             "expectation_type": "expect_column_values_to_not_be_null",
             "column": "customer_id",
             "success": False,
@@ -282,6 +353,8 @@ def test_build_validation_metric_rows_supports_type_key() -> None:
         suite_name="customers_suite",
         run_name="customers_20260308_120000",
         row_count=10,
+        original_row_count=10,
+        sampling_metadata=None,
         validation_time_utc="2026-03-08T12:00:00Z",
     )
 
@@ -309,6 +382,13 @@ def _build_config(
         metrics_store_path=logs_root / "dq_metrics.delta",
         metrics_fail_on_persistence_error=metrics_fail_on_persistence_error,
         fail_on_validation_failure=False,
+        enable_sampling=False,
+        sampling_mode="auto",
+        sampling_confidence=0.95,
+        sampling_margin_error=0.01,
+        sampling_max_rows=100000,
+        sampling_stratify_by=None,
+        sampling_seed=42,
         log_level="INFO",
         result_format="SUMMARY",
         suite_resolution_order=["explicit_suite_name"],

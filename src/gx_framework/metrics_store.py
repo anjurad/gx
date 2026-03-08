@@ -28,6 +28,8 @@ def persist_validation_metrics(
     run_name: str,
     row_count: int | None,
     validation_time_utc: str,
+    original_row_count: int | None = None,
+    sampling_metadata: dict[str, Any] | None = None,
 ) -> MetricsPersistenceResult:
     """Persist per-expectation validation metrics to the configured store."""
     rows = build_validation_metric_rows(
@@ -36,6 +38,8 @@ def persist_validation_metrics(
         suite_name=suite_name,
         run_name=run_name,
         row_count=row_count,
+        original_row_count=original_row_count,
+        sampling_metadata=sampling_metadata,
         validation_time_utc=validation_time_utc,
     )
     if config.metrics_store_format != "delta":
@@ -58,8 +62,11 @@ def build_validation_metric_rows(
     run_name: str,
     row_count: int | None,
     validation_time_utc: str,
+    original_row_count: int | None = None,
+    sampling_metadata: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Flatten a GX validation payload into one metric row per expectation."""
+    sampling_metadata = sampling_metadata or {}
     results = validation_result.get("results", []) or []
     statistics = validation_result.get("statistics", {}) or {}
     total_expectations = _to_int(statistics.get("evaluated_expectations")) or len(results)
@@ -89,6 +96,15 @@ def build_validation_metric_rows(
                 "successful_expectations": successful_expectations,
                 "failed_expectations": failed_expectations,
                 "row_count": row_count,
+                "original_row_count": original_row_count,
+                "sampling_strategy": sampling_metadata.get("sampling_strategy", "full"),
+                "sampling_confidence": _to_float(
+                    sampling_metadata.get("sampling_confidence")
+                ),
+                "sampling_margin_error": _to_float(
+                    sampling_metadata.get("sampling_margin_error")
+                ),
+                "sampling_stratify_by": sampling_metadata.get("sampling_stratify_by"),
                 "expectation_type": str(expectation_type or "unknown_expectation"),
                 "column": kwargs.get("column"),
                 "success": bool(item.get("success", False)),
@@ -130,6 +146,11 @@ def _write_delta_metrics(
             ("successful_expectations", pa.int64()),
             ("failed_expectations", pa.int64()),
             ("row_count", pa.int64()),
+            ("original_row_count", pa.int64()),
+            ("sampling_strategy", pa.string()),
+            ("sampling_confidence", pa.float64()),
+            ("sampling_margin_error", pa.float64()),
+            ("sampling_stratify_by", pa.string()),
             ("expectation_type", pa.string()),
             ("column", pa.string()),
             ("success", pa.bool_()),

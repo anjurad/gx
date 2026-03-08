@@ -14,6 +14,7 @@ from .exceptions import SuiteResolutionError, ValidationExecutionError
 from .logger import get_logger
 from .metrics_store import MetricsPersistenceResult, persist_validation_metrics
 from .result_models import build_validation_result_summary
+from .sampling import apply_sampling, build_sampling_config
 from .suite_resolver import resolve_suite_name
 from .utils import build_run_name, infer_dataset_name_from_table
 
@@ -22,6 +23,7 @@ def validate_dataframe(
     df: Any,
     dataset_name: str | None = None,
     suite_name: str | None = None,
+    sampling_config: dict[str, Any] | None = None,
     config_path: str | None = None,
     run_name: str | None = None,
     fail_on_error: bool = False,
@@ -34,6 +36,7 @@ def validate_dataframe(
         df: PySpark DataFrame to validate.
         dataset_name: Optional logical dataset name used for suite resolution.
         suite_name: Optional explicit expectation suite name.
+        sampling_config: Optional sampling overrides for the validation run.
         config_path: Optional path to validation defaults YAML.
         run_name: Optional explicit run name.
         fail_on_error: Whether to raise when validation fails.
@@ -58,7 +61,14 @@ def validate_dataframe(
             config=config,
         )
         resolved_run_name = run_name or build_run_name(dataset_name, resolved_suite_name)
-        row_count = _safe_count_rows(df)
+        original_row_count = _safe_count_rows(df)
+        effective_sampling_config = build_sampling_config(config, sampling_config)
+        sampled_df, sampling_metadata = apply_sampling(
+            df=df,
+            sampling_config=effective_sampling_config,
+            original_row_count=original_row_count,
+        )
+        validated_row_count = sampling_metadata.get("validated_row_count", original_row_count)
 
         logger.info(
             "validation_started",
@@ -66,14 +76,16 @@ def validate_dataframe(
                 "dataset_name": dataset_name,
                 "suite_name": resolved_suite_name,
                 "run_name": resolved_run_name,
-                "row_count": row_count,
+                "original_row_count": original_row_count,
+                "validated_row_count": validated_row_count,
+                "sampling_strategy": sampling_metadata.get("sampling_strategy", "full"),
             },
         )
 
         context = get_gx_context(config.gx_root)
         validator = _prepare_runtime_batch_request(
             context=context,
-            df=df,
+            df=sampled_df,
             suite_name=resolved_suite_name,
             run_name=resolved_run_name,
             config=config,
@@ -88,6 +100,9 @@ def validate_dataframe(
             dataset_name=dataset_name,
             suite_name=resolved_suite_name,
             run_name=resolved_run_name,
+            original_row_count=original_row_count,
+            validated_row_count=validated_row_count,
+            sampling_metadata=sampling_metadata,
         )
 
         metrics_result = _persist_validation_metrics_if_enabled(
@@ -96,7 +111,9 @@ def validate_dataframe(
             dataset_name=dataset_name,
             suite_name=resolved_suite_name,
             run_name=resolved_run_name,
-            row_count=row_count,
+            row_count=validated_row_count,
+            original_row_count=original_row_count,
+            sampling_metadata=sampling_metadata,
             validation_time_utc=str(result["validation_time_utc"]),
             logger=logger,
         )
@@ -134,6 +151,9 @@ def validate_dataframe(
                 "success": result["success"],
                 "failed_expectations": result["failed_expectations"],
                 "duration_seconds": duration_seconds,
+                "original_row_count": original_row_count,
+                "validated_row_count": validated_row_count,
+                "sampling_strategy": sampling_metadata.get("sampling_strategy", "full"),
                 "suite_path": str(suite_path),
                 "result_path": str(persisted_result_path) if persisted_result_path else None,
                 "metrics_rows_written": (
@@ -185,6 +205,7 @@ def validate_table(
     table_name: str,
     dataset_name: str | None = None,
     suite_name: str | None = None,
+    sampling_config: dict[str, Any] | None = None,
     config_path: str | None = None,
     run_name: str | None = None,
     fail_on_error: bool = False,
@@ -197,6 +218,7 @@ def validate_table(
         table_name: Spark table name to load and validate.
         dataset_name: Optional logical dataset name used for suite resolution.
         suite_name: Optional explicit expectation suite name.
+        sampling_config: Optional sampling overrides for the validation run.
         config_path: Optional path to validation defaults YAML.
         run_name: Optional explicit run name.
         fail_on_error: Whether to raise when validation fails.
@@ -212,6 +234,7 @@ def validate_table(
         df=spark.table(table_name),
         dataset_name=resolved_dataset_name,
         suite_name=suite_name,
+        sampling_config=sampling_config,
         config_path=config_path,
         run_name=run_name,
         fail_on_error=fail_on_error,
@@ -288,6 +311,9 @@ def _format_result(
     dataset_name: str | None,
     suite_name: str,
     run_name: str,
+    original_row_count: int | None = None,
+    validated_row_count: int | None = None,
+    sampling_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Transform a GX validation result into the public framework contract."""
     result = build_validation_result_summary(
@@ -295,6 +321,9 @@ def _format_result(
         dataset_name=dataset_name,
         suite_name=suite_name,
         run_name=run_name,
+        original_row_count=original_row_count,
+        validated_row_count=validated_row_count,
+        sampling_metadata=sampling_metadata,
     ).to_dict()
     return result
 
@@ -469,6 +498,8 @@ def _persist_validation_metrics_if_enabled(
     suite_name: str,
     run_name: str,
     row_count: int | None,
+    original_row_count: int | None,
+    sampling_metadata: dict[str, Any] | None,
     validation_time_utc: str,
     logger: Any,
 ) -> MetricsPersistenceResult | None:
@@ -484,6 +515,8 @@ def _persist_validation_metrics_if_enabled(
             suite_name=suite_name,
             run_name=run_name,
             row_count=row_count,
+            original_row_count=original_row_count,
+            sampling_metadata=sampling_metadata,
             validation_time_utc=validation_time_utc,
         )
     except Exception as exc:

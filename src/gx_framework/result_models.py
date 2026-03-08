@@ -30,6 +30,12 @@ class ValidationResultSummary:
     failed_expectations: int
     success_percent: float
     validation_time_utc: str
+    original_row_count: int | None = None
+    validated_row_count: int | None = None
+    sampling_strategy: str = "full"
+    sampling_confidence: float | None = None
+    sampling_margin_error: float | None = None
+    sampling_stratify_by: str | None = None
     failure_details: list[FailureDetail] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -42,6 +48,9 @@ def build_validation_result_summary(
     dataset_name: str | None,
     suite_name: str,
     run_name: str,
+    original_row_count: int | None = None,
+    validated_row_count: int | None = None,
+    sampling_metadata: dict[str, Any] | None = None,
 ) -> ValidationResultSummary:
     """Build a simplified result summary from a GX validation result.
 
@@ -54,6 +63,7 @@ def build_validation_result_summary(
     Returns:
         A normalized validation result summary.
     """
+    sampling_metadata = sampling_metadata or {}
     results = validation_result.get("results", []) or []
     successful_expectations = sum(1 for item in results if item.get("success"))
     total_expectations = len(results)
@@ -104,5 +114,13 @@ def build_validation_result_summary(
         failed_expectations=failed_expectations,
         success_percent=success_percent,
         validation_time_utc=format_utc_timestamp(utc_now()),
+        original_row_count=original_row_count,
+        validated_row_count=validated_row_count,
+        sampling_strategy=str(sampling_metadata.get("sampling_strategy", "full")),
+        sampling_confidence=coerce_float(sampling_metadata.get("sampling_confidence")),
+        sampling_margin_error=coerce_float(
+            sampling_metadata.get("sampling_margin_error")
+        ),
+        sampling_stratify_by=sampling_metadata.get("sampling_stratify_by"),
         failure_details=failure_details,
     )

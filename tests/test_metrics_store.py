@@ -27,6 +27,13 @@ def test_persist_validation_metrics_writes_delta_table(tmp_path: Path) -> None:
         metrics_store_path=metrics_path,
         metrics_fail_on_persistence_error=False,
         fail_on_validation_failure=False,
+        enable_sampling=False,
+        sampling_mode="auto",
+        sampling_confidence=0.95,
+        sampling_margin_error=0.01,
+        sampling_max_rows=100000,
+        sampling_stratify_by=None,
+        sampling_seed=42,
         log_level="INFO",
         result_format="SUMMARY",
         suite_resolution_order=["explicit_suite_name"],
@@ -64,6 +71,13 @@ def test_persist_validation_metrics_writes_delta_table(tmp_path: Path) -> None:
         suite_name="customers_suite",
         run_name="customers_20260308_120000",
         row_count=8,
+        original_row_count=12,
+        sampling_metadata={
+            "sampling_strategy": "statistical",
+            "sampling_confidence": 0.95,
+            "sampling_margin_error": 0.01,
+            "sampling_stratify_by": None,
+        },
         validation_time_utc="2026-03-08T12:00:00Z",
     )
 
@@ -73,5 +87,7 @@ def test_persist_validation_metrics_writes_delta_table(tmp_path: Path) -> None:
     assert persistence_result.row_count == 1
     assert persistence_result.metrics_store_path == metrics_path
     assert records[0]["dataset_name"] == "customers"
+    assert records[0]["original_row_count"] == 12
+    assert records[0]["sampling_strategy"] == "statistical"
     assert records[0]["expectation_type"] == "expect_column_values_to_not_be_null"
     assert records[0]["unexpected_count"] == 2

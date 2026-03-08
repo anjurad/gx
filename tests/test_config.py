@@ -26,6 +26,13 @@ def test_load_framework_config_reads_defaults_and_dataset_mapping(tmp_path: Path
                 'metrics_store_path: "./telemetry/dq_metrics.delta"',
                 'metrics_fail_on_persistence_error: true',
                 'fail_on_validation_failure: true',
+                'enable_sampling: true',
+                'sampling_mode: "statistical"',
+                'sampling_confidence: 0.9',
+                'sampling_margin_error: 0.02',
+                'sampling_max_rows: 500',
+                'sampling_stratify_by: "customer_segment"',
+                'sampling_seed: 99',
                 'log_level: "DEBUG"',
                 'result_format: "SUMMARY"',
                 'suite_resolution_order:',
@@ -51,6 +58,13 @@ def test_load_framework_config_reads_defaults_and_dataset_mapping(tmp_path: Path
     assert config.metrics_store_path == (tmp_path / "telemetry" / "dq_metrics.delta").resolve()
     assert config.metrics_fail_on_persistence_error is True
     assert config.fail_on_validation_failure is True
+    assert config.enable_sampling is True
+    assert config.sampling_mode == "statistical"
+    assert config.sampling_confidence == 0.9
+    assert config.sampling_margin_error == 0.02
+    assert config.sampling_max_rows == 500
+    assert config.sampling_stratify_by == "customer_segment"
+    assert config.sampling_seed == 99
     assert config.log_level == "DEBUG"
     assert config.datasets_config == {"customers": {"suite_name": "customers_suite"}}
 
@@ -64,6 +78,8 @@ def test_load_framework_config_uses_builtin_defaults_when_files_missing(tmp_path
     assert config.enable_metrics_logging is False
     assert config.metrics_store_format == "delta"
     assert config.metrics_store_path == (tmp_path / "logs" / "dq_metrics.delta").resolve()
+    assert config.enable_sampling is False
+    assert config.sampling_mode == "auto"
     assert config.datasets_config is None
 
 
