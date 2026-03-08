@@ -1,33 +1,26 @@
 flowchart LR
-    subgraph Runtime[Swimlane 1 Runtime orchestration]
-        A[A1 Caller input\nSpark DataFrame df\nlayer, schema_name, table_name\noptional sampling and metrics config]
-        B[A2 run_data_quality\nsrc/dq/dq_runner.py]
-        C[A3 Deterministic suite lookup\nbuild_suite_name + resolve_suite_path\ngx/expectations/layer.schema.table.yml]
-        D[A4 Preflight checks\ninput contract\nenvironment readiness\nsuite YAML validity]
-        E[A5 Sampling\nsrc/dq/sampling.py\nfull or statistical or stratified or auto]
-        F[A6 GX validation\n_run_gx_validation\nvalidate sampled DataFrame against suite]
-        G[A7 Normalise results\nsrc/dq/normalise.py\nGX result to metric rows and summary]
-        H[A8 Optional metrics write\n_write_metrics\ntable analytics.dq_metrics\nor path Delta or Parquet]
-        I[A9 Returned summary dict\nsuccess, expectation counts\nsampling metadata\nmetrics logging status]
+    subgraph Runtime[Runtime validation flow]
+        A[Caller input\nSpark DataFrame or table name\ndataset_name or explicit suite_name]
+        B[B1 Public API\nsrc/gx_framework/validator.py\nvalidate_dataframe or validate_table]
+        C[B2 Config load\nconfig/validation_defaults.yml\nconfig/datasets.yml]
+        D[B3 Suite resolution\nexplicit suite or dataset mapping\nor dataset naming fallback]
+        E[B4 GX context load\ngx/great_expectations.yml]
+        F[B5 Runtime validator prep\nfluent API first\nlegacy batch fallback]
+        G[B6 Execute validation\nGreat Expectations validator.validate]
+        H[B7 Normalize result\nJSON-friendly summary\nfailed expectation details]
+        I[B8 Optional persistence\nlogs/gx_validation_YYYYMMDD.log\nlogs/validation_results/*.json]
 
         A --> B --> C --> D --> E --> F --> G --> H --> I
-        G --> I
     end
 
-    subgraph GX[Swimlane 2 GX configuration and artefacts]
-        J[G1 gx/great_expectations.yml\nGX context config\nstores, fluent datasources\ndata docs site, plugins directory]
-        K[G2 gx/expectations/*.yml\nExpectation suites\nrequired validation input artefact]
-        L[G3 gx/uncommitted/validations/\nvalidation result JSON artefacts]
-        M[G4 gx/uncommitted/data_docs/\nrendered GX Data Docs output]
-        N[G5 gx/plugins/custom_data_docs/\ncustom docs styling and renderers]
-        O[G6 gx/checkpoints/\nconfigured store\nnot used by current wrapper flow]
-        P[G7 gx/validation_definitions/\nconfigured store\nnot used by current wrapper flow]
+    subgraph Artefacts[Project artefacts]
+        J[C1 gx/expectations/*.yml or *.json]
+        K[C2 gx/plugins/custom_data_docs/]
+        L[C3 gx/uncommitted/data_docs/]
+        M[C4 gx/checkpoints/ and gx/validation_definitions/\nconfigured structure, not part of the active notebook flow]
     end
 
-    J --> F
-    K --> C
-    F --> L
-    L --> M
-    N --> M
-    O -.-> F
-    P -.-> F
+    J --> D
+    E --> K
+    K --> L
+    M -.-> E

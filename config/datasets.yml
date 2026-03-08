@@ -1,0 +1,7 @@
+datasets:
+  green_2017_test:
+    suite_name: "bronze.sales.green_2017_test"
+    description: "Validation rules for the local green taxi 2017 test dataset"
+  green_tripdata_2017:
+    suite_name: "bronze.sales.green_tripdata_2017"
+    description: "Validation rules for the local green taxi trip sample dataset"

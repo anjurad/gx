@@ -113,5 +113,17 @@ fluent_datasources:
           runtime_whole_dataframe:
             id: ff7b5dc7-0780-43be-952d-77f4551a4a20
             partitioner:
+  fabric_spark_datasource:
+    type: spark
+    id: a3e895d5-27d2-4306-a8b7-af71d0776743
+    assets:
+      green_tripdata_2017_asset:
+        type: dataframe
+        id: 66deade4-33eb-464c-9344-0230e0b91e03
+        batch_metadata: {}
+        batch_definitions:
+          runtime_whole_dataframe:
+            id: 5489c951-546f-4898-8512-e877e31a0f38
+            partitioner:
 analytics_enabled:
 data_context_id: cb9a485e-9d79-4aee-ac3e-e22120892dde

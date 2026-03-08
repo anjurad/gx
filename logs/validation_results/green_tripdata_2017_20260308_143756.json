@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "dataset_name": "green_tripdata_2017",
+  "suite_name": "bronze.sales.green_tripdata_2017",
+  "run_name": "green_tripdata_2017_20260308_143756",
+  "total_expectations": 3,
+  "successful_expectations": 3,
+  "failed_expectations": 0,
+  "success_percent": 100.0,
+  "validation_time_utc": "2026-03-08T14:38:01Z",
+  "failure_details": []
+}

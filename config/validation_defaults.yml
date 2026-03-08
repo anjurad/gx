@@ -1,0 +1,15 @@
+gx_root: "./gx"
+logs_root: "./logs"
+default_datasource_name: "fabric_spark_datasource"
+default_data_asset_name_suffix: "_asset"
+default_suite_suffix: "_suite"
+default_checkpoint_suffix: "_checkpoint"
+save_validation_results: true
+fail_on_validation_failure: false
+log_level: "INFO"
+result_format: "SUMMARY"
+suite_resolution_order:
+  - explicit_suite_name
+  - dataset_name_plus_suffix
+  - config_mapping
+  - dataset_name
