@@ -71,11 +71,12 @@ def build_validation_result_summary(
         expectation_config = item.get("expectation_config", {}) or {}
         kwargs = expectation_config.get("kwargs", {}) or {}
         result_obj = item.get("result", {}) or {}
+        expectation_type = expectation_config.get("expectation_type") or expectation_config.get(
+            "type"
+        )
         failure_details.append(
             FailureDetail(
-                expectation_type=str(
-                    expectation_config.get("expectation_type", "unknown_expectation")
-                ),
+                expectation_type=str(expectation_type or "unknown_expectation"),
                 column=kwargs.get("column"),
                 unexpected_count=coerce_int(result_obj.get("unexpected_count")),
             )

@@ -21,6 +21,10 @@ def test_load_framework_config_reads_defaults_and_dataset_mapping(tmp_path: Path
                 'default_suite_suffix: "_suite"',
                 'default_checkpoint_suffix: "_checkpoint"',
                 'save_validation_results: false',
+                'enable_metrics_logging: true',
+                'metrics_store_format: "delta"',
+                'metrics_store_path: "./telemetry/dq_metrics.delta"',
+                'metrics_fail_on_persistence_error: true',
                 'fail_on_validation_failure: true',
                 'log_level: "DEBUG"',
                 'result_format: "SUMMARY"',
@@ -42,6 +46,10 @@ def test_load_framework_config_reads_defaults_and_dataset_mapping(tmp_path: Path
     assert config.logs_root == (tmp_path / "custom_logs").resolve()
     assert config.default_datasource_name == "fabric_runtime"
     assert config.save_validation_results is False
+    assert config.enable_metrics_logging is True
+    assert config.metrics_store_format == "delta"
+    assert config.metrics_store_path == (tmp_path / "telemetry" / "dq_metrics.delta").resolve()
+    assert config.metrics_fail_on_persistence_error is True
     assert config.fail_on_validation_failure is True
     assert config.log_level == "DEBUG"
     assert config.datasets_config == {"customers": {"suite_name": "customers_suite"}}
@@ -53,6 +61,9 @@ def test_load_framework_config_uses_builtin_defaults_when_files_missing(tmp_path
     assert config.gx_root == (tmp_path / "gx").resolve()
     assert config.logs_root == (tmp_path / "logs").resolve()
     assert config.default_suite_suffix == DEFAULT_CONFIG["default_suite_suffix"]
+    assert config.enable_metrics_logging is False
+    assert config.metrics_store_format == "delta"
+    assert config.metrics_store_path == (tmp_path / "logs" / "dq_metrics.delta").resolve()
     assert config.datasets_config is None
 
 
@@ -62,3 +73,20 @@ def test_load_framework_config_raises_for_invalid_yaml(tmp_path: Path) -> None:
 
     with pytest.raises(ConfigurationError):
         load_framework_config(config_path=config_file, repo_root=tmp_path)
+
+
+def test_metrics_demo_example_config_loads_from_repo() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+
+    config = load_framework_config(
+        config_path=repo_root / "config" / "validation_defaults.metrics_demo.yml",
+        repo_root=repo_root,
+    )
+
+    assert config.enable_metrics_logging is True
+    assert config.save_validation_results is False
+    assert config.metrics_store_format == "delta"
+    assert config.metrics_store_path == (
+        repo_root / "logs" / "notebook_demo_dq_metrics.delta"
+    ).resolve()
+    assert config.metrics_fail_on_persistence_error is True

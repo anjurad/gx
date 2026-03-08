@@ -28,6 +28,7 @@ These functions:
 - resolve dataset-to-suite mappings from `config/datasets.yml`
 - initialize the Great Expectations project under `gx/`
 - run validation against the resolved expectation suite
+- optionally append per-expectation validation metrics to a Delta path for historical tracking
 - return a simplified JSON-serializable result contract
 
 ## Primary Workflow
@@ -38,9 +39,13 @@ Use `notebooks/02_validate_with_gx_framework.ipynb` as the primary demonstration
 - validating a Spark DataFrame with `validate_dataframe(...)`
 - validating a Spark table with `validate_table(...)`
 - inspecting the returned summary payload
-- locating logs and saved validation results
+- locating logs, saved validation results, and Delta-backed metrics outputs
+- trending retained expectation metrics across multiple validation runs
+- demonstrating how failed validations persist failure metrics for later analysis
 
 The notebook is intentionally thin. Framework logic stays in `src/gx_framework/`.
+
+For the metrics sections, use `config/validation_defaults.metrics_demo.yml` as the reusable example config instead of creating a temporary config file in the notebook.
 
 ## Process Flow
 
@@ -82,8 +87,7 @@ flowchart LR
 - `gx/`: Great Expectations project, suites, and generated artefacts
 - `notebooks/02_validate_with_gx_framework.ipynb`: primary notebook entry point
 - `tests/`: retained test suite for the active implementation
-- `archive/legacy-dq/`: archived legacy wrapper implementation, tests, and docs
-- `notebooks/archive/`: historical notebooks retained for reference
+- `archive/legacy-dq/`: archived legacy wrapper implementation, historical notebooks, tests, and docs
 
 ## Environment Setup
 
@@ -127,10 +131,11 @@ uv run pytest tests/test_config.py tests/test_logger.py tests/test_suite_resolve
 
 - structured logs: `logs/gx_validation_YYYYMMDD.log`
 - saved result payloads: `logs/validation_results/*.json`
+- optional Delta metrics store: `logs/dq_metrics.delta/`
+- notebook metrics demo config: `config/validation_defaults.metrics_demo.yml`
+- notebook metrics demo Delta store: `logs/notebook_demo_dq_metrics.delta/`
 - GX Data Docs and validation artefacts: under `gx/uncommitted/`
 
 ## Archived Material
 
-The previous `dq` wrapper path, its prototype scripts, and its contract test have been moved under `archive/legacy-dq/`.
-
-The earlier notebooks remain under `notebooks/archive/` as historical references only and are no longer part of the supported execution path.
+The previous `dq` wrapper path, its prototype scripts, its historical notebooks, and its contract test have been moved under `archive/legacy-dq/`.

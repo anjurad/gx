@@ -20,6 +20,10 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "default_suite_suffix": "_suite",
     "default_checkpoint_suffix": "_checkpoint",
     "save_validation_results": True,
+    "enable_metrics_logging": False,
+    "metrics_store_format": "delta",
+    "metrics_store_path": "./logs/dq_metrics.delta",
+    "metrics_fail_on_persistence_error": False,
     "fail_on_validation_failure": False,
     "log_level": "INFO",
     "result_format": "SUMMARY",
@@ -45,6 +49,10 @@ class FrameworkConfig:
         default_suite_suffix: Default suffix used during suite resolution.
         default_checkpoint_suffix: Reserved for compatibility with checkpoint naming.
         save_validation_results: Whether to persist result payloads to disk by default.
+        enable_metrics_logging: Whether to append per-expectation metrics to a store.
+        metrics_store_format: Storage format used for metrics persistence.
+        metrics_store_path: Absolute target path for persisted validation metrics.
+        metrics_fail_on_persistence_error: Whether metrics persistence failures raise.
         fail_on_validation_failure: Whether failed validations raise by default.
         log_level: Default logging level.
         result_format: GX validation result format.
@@ -60,6 +68,10 @@ class FrameworkConfig:
     default_suite_suffix: str
     default_checkpoint_suffix: str
     save_validation_results: bool
+    enable_metrics_logging: bool
+    metrics_store_format: str
+    metrics_store_path: Path
+    metrics_fail_on_persistence_error: bool
     fail_on_validation_failure: bool
     log_level: str
     result_format: str
@@ -112,6 +124,12 @@ def load_framework_config(
         default_suite_suffix=str(config_payload["default_suite_suffix"]),
         default_checkpoint_suffix=str(config_payload["default_checkpoint_suffix"]),
         save_validation_results=bool(config_payload["save_validation_results"]),
+        enable_metrics_logging=bool(config_payload["enable_metrics_logging"]),
+        metrics_store_format=str(config_payload["metrics_store_format"]).lower(),
+        metrics_store_path=normalize_path(config_payload["metrics_store_path"], root),
+        metrics_fail_on_persistence_error=bool(
+            config_payload["metrics_fail_on_persistence_error"]
+        ),
         fail_on_validation_failure=bool(
             config_payload["fail_on_validation_failure"]
         ),

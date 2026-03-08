@@ -12,6 +12,7 @@ from .config import FrameworkConfig, load_framework_config
 from .context_manager import get_gx_context
 from .exceptions import SuiteResolutionError, ValidationExecutionError
 from .logger import get_logger
+from .metrics_store import MetricsPersistenceResult, persist_validation_metrics
 from .result_models import build_validation_result_summary
 from .suite_resolver import resolve_suite_name
 from .utils import build_run_name, infer_dataset_name_from_table
@@ -89,6 +90,17 @@ def validate_dataframe(
             run_name=resolved_run_name,
         )
 
+        metrics_result = _persist_validation_metrics_if_enabled(
+            validation_result=validation_result,
+            config=config,
+            dataset_name=dataset_name,
+            suite_name=resolved_suite_name,
+            run_name=resolved_run_name,
+            row_count=row_count,
+            validation_time_utc=str(result["validation_time_utc"]),
+            logger=logger,
+        )
+
         persisted_result_path = None
         should_save_results = save_results and config.save_validation_results
         if should_save_results:
@@ -104,6 +116,11 @@ def validate_dataframe(
                     "suite_name": resolved_suite_name,
                     "run_name": resolved_run_name,
                     "result_path": str(persisted_result_path),
+                    "metrics_store_path": (
+                        str(metrics_result.metrics_store_path)
+                        if metrics_result is not None
+                        else None
+                    ),
                 },
             )
 
@@ -119,6 +136,14 @@ def validate_dataframe(
                 "duration_seconds": duration_seconds,
                 "suite_path": str(suite_path),
                 "result_path": str(persisted_result_path) if persisted_result_path else None,
+                "metrics_rows_written": (
+                    metrics_result.row_count if metrics_result is not None else 0
+                ),
+                "metrics_store_path": (
+                    str(metrics_result.metrics_store_path)
+                    if metrics_result is not None
+                    else None
+                ),
             },
         )
 
@@ -435,6 +460,62 @@ def _save_validation_result(
     result_path = results_root / f"{run_name}.json"
     result_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result_path
+
+
+def _persist_validation_metrics_if_enabled(
+    validation_result: dict[str, Any],
+    config: FrameworkConfig,
+    dataset_name: str | None,
+    suite_name: str,
+    run_name: str,
+    row_count: int | None,
+    validation_time_utc: str,
+    logger: Any,
+) -> MetricsPersistenceResult | None:
+    """Persist per-expectation metrics when enabled by configuration."""
+    if not config.enable_metrics_logging:
+        return None
+
+    try:
+        metrics_result = persist_validation_metrics(
+            validation_result=validation_result,
+            config=config,
+            dataset_name=dataset_name,
+            suite_name=suite_name,
+            run_name=run_name,
+            row_count=row_count,
+            validation_time_utc=validation_time_utc,
+        )
+    except Exception as exc:
+        logger.exception(
+            "validation_metrics_persistence_failed",
+            extra={
+                "dataset_name": dataset_name,
+                "suite_name": suite_name,
+                "run_name": run_name,
+                "metrics_store_path": str(config.metrics_store_path),
+                "metrics_store_format": config.metrics_store_format,
+            },
+        )
+        if config.metrics_fail_on_persistence_error:
+            raise ValidationExecutionError(
+                "Validation metrics persistence failed: "
+                f"{exc}"
+            ) from exc
+        return None
+
+    logger.info(
+        "validation_metrics_persisted",
+        extra={
+            "dataset_name": dataset_name,
+            "suite_name": suite_name,
+            "run_name": run_name,
+            "metrics_rows_written": metrics_result.row_count,
+            "metrics_store_path": str(metrics_result.metrics_store_path),
+            "metrics_store_format": metrics_result.metrics_store_format,
+        },
+    )
+    return metrics_result
 
 
 def _validate_dataframe_input(df: Any) -> None:

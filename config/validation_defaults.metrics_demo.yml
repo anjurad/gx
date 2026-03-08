@@ -1,14 +1,17 @@
+# Example configuration for the notebook metrics demos.
+# Use this config when you want Delta-backed expectation metrics retained
+# across repeated validation runs without changing the default repo behavior.
 gx_root: "./gx"
 logs_root: "./logs"
 default_datasource_name: "fabric_spark_datasource"
 default_data_asset_name_suffix: "_asset"
 default_suite_suffix: "_suite"
 default_checkpoint_suffix: "_checkpoint"
-save_validation_results: true
-enable_metrics_logging: false
+save_validation_results: false
+enable_metrics_logging: true
 metrics_store_format: "delta"
-metrics_store_path: "./logs/dq_metrics.delta"
-metrics_fail_on_persistence_error: false
+metrics_store_path: "./logs/notebook_demo_dq_metrics.delta"
+metrics_fail_on_persistence_error: true
 fail_on_validation_failure: false
 log_level: "INFO"
 result_format: "SUMMARY"

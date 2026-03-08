@@ -7,6 +7,7 @@ Contents:
 - `src/optimised-02.py`: archived prototype script
 - `src/optimised-03.py`: archived prototype script
 - `src/optimised-04.py`: archived local runner for the old wrapper path
+- `notebooks/`: archived notebook demos for the wrapper-first path
 - `tests/test_dq_runner_contract.py`: legacy contract test for the wrapper API
 - `docs/process-flow-dq.mmd`: archived process-flow diagram for the wrapper path
 
